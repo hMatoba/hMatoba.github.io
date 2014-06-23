@@ -1110,7 +1110,7 @@ UPDATE plays SET scores = scores - [ 12, 21 ] WHERE id = '123-afde'; // removes 
 </pre></pre>
                 <p>このときtokenファンクションは一つのtext型の引数を取り（クラスタリングされた列はなく、パーティションキーはプライマリキーそのものである）、返される方はbigintである。</p>
                 <h3 id="uuidFun">Uuid</h3>
-                <p>uuid functionはパラメータなしにタイプ4のUUIDを作成する。</p>
+                <p>uuid functionはパラメータなしにバージョン4のUUIDを作成する。</p>
                 <h3 id="timeuuidFun">Timeuuid functions</h3>
                 <h4 id="now"><code>now</code></h4>
                 <p>nowファンクションは引数を取らず、新しいユニークなtimeuuidを作る（ステートメントが使われるときに実行される）。このメソッドは便利だが、WHEREにおいてセンスのない使われ方をする。</p><pre class="sample"><pre>SELECT * FROM myTable WHERE t = now()
@@ -1120,7 +1120,7 @@ UPDATE plays SET scores = scores - [ 12, 21 ] WHERE id = '123-afde'; // removes 
                 <p>minTimeuuid（あるいはmaxTimeuuid）ファンクションはtimestampの値t（タイムスタンプか日付の文字列）を取り、そこから適切なもっとも小さい（あるいはもっとも大きい）偽のtimeuuidを作る。</p> <pre class="sample"><pre>SELECT * FROM myTable WHERE t > maxTimeuuid('2013-01-01 00:05+0000') AND t &lt; minTimeuuid('2013-02-02 10:00+0000')
 </pre></pre>
                 <p>上のクエリでのtimeuuidの値tは‘2013-01-01 00:05+0000’より古く、‘2013-02-02 10:00+0000’より若くなる。t &gt;= maxTimeuuid('2013-01-01 00:05+0000')は‘2013-01-01 00:05+0000’で作成されたtimeuuidを選択せず、本質的にはt &gt; maxTimeuuid('2013-01-01 00:05+0000')と書くことと等価である。</p>
-                <p>注意：minTimeuuidとmaxTimeuuidによって作成された値を偽のUUIDと読んだ。なぜならそれらはRFC 4122で決められた時間ベースのUUID作成プロセスを順守していないためである。実際、これら二つのメソッドはユニークな値を返さない。よってこれらはクエリのためだけに使うべきである（例はこれまでのサンプルで示した）。この結果を挿入したりするのは悪いアイディアである。</p>
+                <p>注意：minTimeuuidとmaxTimeuuidによって作成された値を偽のUUIDと読んだ。なぜならそれらはRFC 4122で決められた時間ベースのUUID作成プロセスを順守していないためである。実際、これら二つのメソッドはユニークな値を返さない。よってこれらはクエリのためだけに使うべきである（例はこれまでのサンプルで示した）。この結果を挿入するのは賢いアイディアではない。</p>
                 <h4 id="dateOfandunixTimestampOf"><code>dateOf</code> and <code>unixTimestampOf</code></h4>
                 <p>dateOfファンクションとunixTimestampOfファンクションはtimeuuidを引数として取り、タイムスタンプを埋め込んだ出力を出す。だがdateOfファンクションはtimestamp型で値を返し、unixTimestampOfファンクションはbigint型で値を返す。</p>
                 <h3 id="blobFun">Blob conversion functions</h3>
