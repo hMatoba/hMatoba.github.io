@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>CQL</title>
+    <style>
+        pre.sample {
+            padding: 1ex;
+            padding-left: 4ex;
+            border: 1px solid #ada;
+            background-color: #fafffa;
+        }
+        pre.syntax {
+            padding: 1ex;
+            padding-left: 4ex;
+            border: 1px solid #aaf;
+            background-color: #fafaff;
+        }
+        p.banner {
+            padding: 1ex;
+            padding-left: 4ex;
+            border-top: 1px solid #faa;
+            border-bottom: 1px solid #faa;
+            background-color: #fffafa;
+            color: #b33;
+            text-align: center;
+        }
+        table {
+            margin-left: 4ex;
+            /* width: 80%; */
+            border-collapse: collapse;
+            border: 2px solid #bbb;
+        }
+        td,
+        th {
+            padding: 2px 1ex;
+            border: 1px solid #bbb;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+        body {
+            background-color: white;
+            padding: 0 2ex;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 3ex;
+        }
+        h2 {
+            text-align: center;
+            border-top: 1px solid #aaa;
+            border-bottom: 1px solid #aaa;
+            background-color: #eee;
+            margin-top: 5ex;
+        }
+        h3 {
+            padding-top: 3ex;
+        }
+        a {
+            color: #333;
+            font-size: 90%;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        a:link {
+            color: #333;
+        }
+        a:visited {
+            color: #111;
+        }
+        a:hover {
+            color: #777;
+            text-decoration: underline;
+        }
+        span#tableOfContents {
+            border: 1px solid #bbb;
+            background-color: #fafafa;
+            display: inline-block;
+            padding-right: 6ex;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Cassandra Query Language (CQL) v3.1.5</h1><span id="tableOfContents"><ol style="list-style: none;"><li><a href="#CassandraQueryLanguageCQL">Cassandra Query Language (CQL) v3</a><ol style="list-style: none;"><li><a href="#CQLSyntax">CQL Syntax</a><ol style="list-style: none;"><li><a href="#Preamble">Preamble</a></li><li><a href="#Conventions">Conventions</a></li><li><a href="#identifiers">Identifiers and keywords</a></li><li><a href="#constants">Constants</a></li><li><a href="#Comments">Comments</a></li><li><a href="#statements">Statements</a></li><li><a href="#preparedStatement">Prepared Statement</a></li></ol></li><li><a href="#dataDefinition">Data Definition</a><ol style="list-style: none;"><li><a href="#createKeyspaceStmt">CREATE KEYSPACE</a></li><li><a href="#useStmt">USE</a></li><li><a href="#alterKeyspaceStmt">ALTER KEYSPACE</a></li><li><a href="#dropKeyspaceStmt">DROP KEYSPACE</a></li><li><a href="#createTableStmt">CREATE TABLE</a></li><li><a href="#alterTableStmt">ALTER TABLE</a></li><li><a href="#dropTableStmt">DROP TABLE</a></li><li><a href="#truncateStmt">TRUNCATE</a></li><li><a href="#createIndexStmt">CREATE INDEX</a></li><li><a href="#dropIndexStmt">DROP INDEX</a></li></ol></li><li><a href="#dataManipulation">Data Manipulation</a><ol style="list-style: none;"><li><a href="#insertStmt">INSERT</a></li><li><a href="#updateStmt">UPDATE</a></li><li><a href="#deleteStmt">DELETE</a></li><li><a href="#batchStmt">BATCH</a></li></ol></li><li><a href="#queries">Queries</a><ol style="list-style: none;"><li><a href="#selectStmt">SELECT</a></li></ol></li><li><a href="#types">Data Types</a><ol style="list-style: none;"><li><a href="#usingdates">Working with dates</a></li><li><a href="#counters">Counters</a></li><li><a href="#collections">Working with collections</a></li></ol></li><li><a href="#functions">Functions</a><ol style="list-style: none;"><li><a href="#tokenFun">Token</a></li><li><a href="#uuidFun">Uuid</a></li><li><a href="#timeuuidFun">Timeuuid functions</a></li><li><a href="#blobFun">Blob conversion functions</a></li></ol></li><li><a href="#appendixA">Appendix A: CQL Keywords</a></li><li></ol></li><li><a href="#Versioning">Versioning</a></li></ol></li></ol></span>
+    <h2 id="CQLSyntax">CQL Syntax</h2>
+    <h3 id="Preamble">Preamble</h3>
+    <p>このドキュメントはCassandra Query Language（CQL）のv3について書かれたものだ。CQL v3はCQL v2への後方互換を持っておらず、多くの点で異なっている。このドキュメントは最新のバージョンについて書かれている。changesセクションにおいて各バージョンでの変更点を記している。</p>
+    <p>CQL v3ではモデルがSQLにとても近いものになっているという印象を受けるだろう。データはテーブルにある行の列として保存されるといったことなど。それに合わせて、このドキュメントでは、テーブル、行、列のような用語はSQLでのそれらと同様の意味を持つ。だけど覚えておいてほしい。それらはCassandraの実装やthrift、CQL v2のAPIで見られた行や列のコンセプトとは別のものだ。</p>
+    <h3 id="Conventions">Conventions</h3>
+    <p>CQLシンタックスを表現するため、このドキュメント中では表記に下記のルールを設ける:</p>
+    <ul>
+        <li>言語のルールを表すにはバッカス（・ナウア）記法を使う:</li>
+    </ul><pre class="syntax"><pre>&lt;start> ::= TERMINAL &lt;non-terminal1> &lt;non-terminal1>
+</pre></pre>
+    <ul>
+        <li>非終端の記号は&lt;angle brackets&gt;を用いる</li>
+        <li>さらにバッカス記法の省略形として正規表現の標準的な記号?,+,*を任意、and、orの意味で使う。丸括弧は記号のグループ化に使い、[
+            <characters>]と記したときは
+                <characters>に含まれるいずれか一つのキャラクターを表現しているとする</li>
+        <li>文法はドキュメント化のために使われるが、それでもマイナーな詳細をいくつか残している。たとえばCREATE TABLEステートメントでの最後の列定義はオプションであるがサポートされており、もしこのドキュメントで提供されている文法だとしてもおすすめはしていない。</li>
+        <li>サンプルコードはコードブロックによって示される:</li>
+    </ul><pre class="sample"><pre>SELECT sample_usage FROM cql;
+</pre></pre>
+    <ul>
+        <li>文中でのキーワード参照やCQLコードは固定幅フォントで記す。</li>
+    </ul>
+    <h3 id="identifiers">Identifiers and keywords</h3>
+    <p>CQLはテーブルや列を識別するのに識別子（名前）を使う。識別子は正規表現[a-zA-Z0-9_]*にマッチする。</p>
+    <p>SELECTやWITHのような識別子はキーワードとする。それらは意味を与えられており、予約されている。キーワードのリストは付録Aで。</p>
+    <p>識別子や引用符で囲まれいないキーワードは大文字小文字の区識別子には引用識別子というものがある。これはダブルクオート(")で囲まれた文字列を指す。引用識別子はキーワードとしては使われない。囲われた文字列は大文字、小文字の違いが区別される。"My Id"と"my id"は違うものだ。すべて小文字の引用識別子は二重引用符を外せば、同じ文字で構成されたただの識別子と同じ意味となる（"myid"はmyidとmyIdと同じ、"myId"とは違う）。引用識別子の中で二重引用符を使いたければ、二重引用符を二回打つことでエスケープされる（"foo""bar"）。</p>
+    <h3 id="constants">Constants</h3>
+    <p>CQLでは次の定数を取ることができる: strings, integers, floats, booleans, uuids, blobs:</p>
+    <ul>
+        <li>文字列は引用符（'）で囲うことで表す。文字列中で引用符を使いたければ二回打てばエスケープされて使える。'It''s raining today'。二重引用符を使って引用識別子と文字列を混同することがないように。</li>
+        <li>intは以下のように表される'-'?[0-9]+</li>
+        <li>floatは以下のように。'-'?[0-9]+('.'[0-9]*)?([eE][+-]?[0-9+])?。NanやInfinityも扱いはfloatとなる。</li>
+        <li>booleanはtrueとfalseだが、大文字小文字の使い方で区別されることはない。
+            <li>UUIDは以下のように。hex{8}-hex{4}-hex{4}-hex{4}-hex{12}。</li>
+            <li>blobは0[xX](hex)+の繰り返して表される。</li>
+    </ul>
+    <p>これらの定数が実際にどういう形を取るかはdata types sectionを参考に。</p>
+    <h3 id="Comments">Comments</h3>
+    <p>CQL中においてコメントは--か//で行を始める。複数行にわたるコメントは/*と*/で囲うこと。</p><pre class="sample"><pre>-- This is a comment
+// This is a comment too
+/* This is
+   a multi-line comment */
+</pre></pre>
+    <h3 id="statements">Statements</h3>
+    <p>CQLはステートメントから成る。SQLと同様にこのステートメントは三つのカテゴリに分けられる:</p>
+    <ul>
+        <li>ストアされているデータをセットしたり変えるためのデータ定義ステートメント</li>
+        <li>データを変更するためのデータ操作ステートメント</li>
+        <li>データを探すためのクエリ</li>
+    </ul>
+    <p>すべての文はセミコロン(;)で終わる。ただし単一のステートメントを扱う場合は省くことができる。サポートしているステートメントは以下のセクションで示す。上記のステートメントの文法を記すのに、以下のような非終端の記号を用いる:</p><pre class="syntax"><pre>&lt;identifier&gt; ::= any quoted or unquoted identifier, excluding reserved keywords
+ &lt;tablename&gt; ::= (&lt;identifier&gt; '.')? &lt;identifier&gt;
+
+    &lt;string&gt; ::= a string constant
+   &lt;integer&gt; ::= an integer constant
+     &lt;float&gt; ::= a float constant
+    &lt;number&gt; ::= &lt;integer&gt; | &lt;float&gt;
+      &lt;uuid&gt; ::= a uuid constant
+   &lt;boolean&gt; ::= a boolean constant
+       &lt;hex&gt; ::= a blob constant
+
+  &lt;constant&gt; ::= &lt;string&gt;
+               | &lt;number&gt;
+               | &lt;uuid&gt;
+               | &lt;boolean&gt;
+               | &lt;hex&gt;
+  &lt;variable&gt; ::= '?'
+               | ':' &lt;identifier&gt;
+      &lt;term&gt; ::= &lt;constant&gt;
+               | &lt;collection-literal&gt;
+               | &lt;variable&gt;
+               | &lt;function&gt; '(' (&lt;term&gt; (',' &lt;term&gt;)*)? ')'
+
+  &lt;collection-literal&gt; ::= &lt;map-literal&gt;
+                         | &lt;set-literal&gt;
+                         | &lt;list-literal&gt;
+         &lt;map-literal&gt; ::= '{' ( &lt;term&gt; ':' &lt;term&gt; ( ',' &lt;term&gt; ':' &lt;term&gt; )* )? '}'
+         &lt;set-literal&gt; ::= '{' ( &lt;term&gt; ( ',' &lt;term&gt; )* )? '}'
+        &lt;list-literal&gt; ::= '[' ( &lt;term&gt; ( ',' &lt;term&gt; )* )? ']'
+
+    &lt;function&gt; ::= &lt;ident&gt;
+
+  &lt;properties&gt; ::= &lt;property&gt; (AND &lt;property&gt;)*
+    &lt;property&gt; ::= &lt;identifier&gt; '=' ( &lt;identifier&gt; | &lt;constant&gt; | &lt;map-literal&gt; )
+</pre></pre>
+    <p>
+        <br/>注意として、実際にすべてのケースで上記の文法が有効なわけではない。とくに、&lt;variable&gt;と入れ子にされた&lt;collection-literal&gt;は&lt;collection-literal&gt;のなかで有効ではない。</p>
+    <p>&lt;variable&gt;は匿名にもなれば名前を持つこともできる。どちらも準備ステートメントで変数と結び付けられる。匿名と命名済みの変数の違いは参照が楽になるかどうかだけである。</p>
+    <p>&lt;properties&gt;はキースペースやテーブルを作ったり変更するのに使う。それぞれの&lt;property&gt;は単一の値かマッピングされた値を取る。詳しくはのちに触れる。</p>
+    <p>&lt;tablename&gt;はテーブルの特定に使う。キースペースが指定されていない状態では、&lt;tablename&gt;はアクティブなキースペースの該当テーブルを指す（キースペースの指定はUSEを使う）。</p>
+    <p>サポートされている&lt;function&gt;についてはfunctionsセクションを参照すること。</p>
+    <h3 id="preparedStatement">Prepared Statement</h3>
+    <p>CQLは準備ステートメントをサポートしている。準備ステートメントはクエリを一度展開し、複数回違った値でそのクエリを実行するときに使う。
+        <p>ステートメントにおいて列の値が求められているなら、&lt;variable&gt;を使うことができる。その場合は変数を結びつけられたステートメントが必要となる。それが用意できれば、それに実際の値を与えることでそれを実行できる。これを使う実際の手続きはCQLドライバに依存しているもので、このドキュメントでこれ以降には載せていない。</p>
+        <h2 id="dataDefinition">Data Definition</h2>
+        <h3 id="createKeyspaceStmt">CREATE KEYSPACE</h3>
+        <p><i>Syntax:</i>
+        </p><pre class="syntax"><pre>&lt;create-keyspace-stmt&gt; ::= CREATE KEYSPACE (IF NOT EXISTS)? &lt;identifier&gt; WITH &lt;properties&gt;
+</pre></pre>
+        <p>
+            <br/><i>Sample:</i>
+        </p><pre class="sample"><pre>CREATE KEYSPACE Excelsior
+           WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};
+
+CREATE KEYSPACE Excalibur
+           WITH replication = {'class': 'NetworkTopologyStrategy', 'DC1' : 1, 'DC2' : 3}
+            AND durable_writes = false;
+</pre></pre>
+        <p>
+            <br/>CREATE KEYSPACEステートメントは新しくトップレベルのキースペースを作る。キースペースはレプリケーションの方式とテーブルセットのオプションを規定する一つのネームスペースである。キースペースの名前として使えるのは32文字以下の英数字である。識別子としてのキースペース名は大文字小文字の区別をしないので、そうしたければ引用識別子を使うこと。</p>
+        <p>CREATE KEYSPACEステートメントが&lt;properties&gt;としてサポートするのは以下である:</p>
+        <table>
+            <tr>
+                <th>name</th>
+                <th>kind</th>
+                <th>mandatory</th>
+                <th>default</th>
+                <th>description</th>
+            </tr>
+            <tr>
+                <td><code>replication</code> 
+                </td>
+                <td><em>map</em> 
+                </td>
+                <td>yes</td>
+                <td></td>
+                <td>The replication strategy and options to use for the keyspace.</td>
+            </tr>
+            <tr>
+                <td><code>durable_writes</code> 
+                </td>
+                <td><em>simple</em> 
+                </td>
+                <td>no</td>
+                <td>true</td>
+                <td>Whether to use the commit log for updates on this keyspace (disable this option at your own risk!).</td>
+            </tr>
+        </table>
+        <p>replication &lt;peroperty&gt;は必須である。少なくともclassサブオプションまで指定しなければならない。ほかのサブオプションはclassに従うようになっている。デフォルトではCassandraは以下のclassをサポートしている:</p>
+        <ul>
+            <li>'SimpleStrategy':クラスタを丸々使ってシンプルなレプリケーションを定義する。サブオプションとして'replication_factor'をサポートしており、これは必須である。</li>
+            <li>'NetworkTopologyStrategy':それぞれのデータセンタで独立したレプリケーションファクタを置くやり方である。他のオプションはキーバリューペアであり、キーはデータセンタの名前を、バリューはレプリケーションファクタを指す。</li>
+            <li>'OldNetworkTopologyStrategy':古いレプリケーション方式である。これよりNetworkTopologyStrategyを使った方がいい。</li>
+        </ul>
+        <p>既存のキースペース名で新たにキースペースを作ろうとすると、エラーが返される。IF NOT EXISTSを使ってそれをやると、ステートメントは結局なにもしないことになる。</p>
+        <h3 id="useStmt">USE</h3>
+        <p><i>Syntax:</i>
+        </p><pre class="syntax"><pre>&lt;use-stmt> ::= USE &lt;identifier>
+</pre></pre>
+        <p><i>Sample:</i>
+        </p><pre class="sample"><pre>USE myApp;
+</pre></pre>
+        <p>USEステートメントは既存のキースペース名と使うことで、現在の使用キースペースを変更する。</p>
+        <h3 id="alterKeyspaceStmt">ALTER KEYSPACE</h3>
+        <p><i>Syntax:</i>
+        </p><pre class="syntax"><pre>&lt;create-keyspace-stmt&gt; ::= ALTER KEYSPACE &lt;identifier&gt; WITH &lt;properties&gt;
+</pre></pre>
+        <p>
+            <br/><i>Sample:</i>
+        </p><pre class="sample"><pre>ALTER KEYSPACE Excelsior
+          WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 4};
+
+</pre></pre>
+        <p>
+            <br/>ALTER KEYSPACEステートメントは既存のキースペースのプロパティを変更する。サポートされる&lt;properties&gt;はCREATE TABLEと同じである。</p>
+        <h3 id="dropKeyspaceStmt">DROP KEYSPACE</h3>
+        <p><i>Syntax:</i>
+        </p><pre class="syntax"><pre>&lt;drop-keyspace-stmt&gt; ::= DROP KEYSPACE ( IF EXISTS )? &lt;identifier&gt;
+</pre></pre>
+        <p><i>Sample:</i>
+        </p><pre class="sample"><pre>DROP KEYSPACE myApp;
+</pre></pre>
+        <p>DROP KEYSPACEステートメントはキースペースとそこに含まれるデータをただちに削除する。</p>
+        <p>キースペースが存在していなければステートメントはエラーを返す。</p>
+        <h3 id="createTableStmt">CREATE TABLE</h3>
+        <p><i>Syntax:</i>
+        </p><pre class="syntax"><pre>&lt;create-table-stmt&gt; ::= CREATE ( TABLE | COLUMNFAMILY ) ( IF NOT EXISTS )? &lt;tablename&gt;
+                          '(' &lt;definition&gt; ( ',' &lt;definition&gt; )* ')'
+                          ( WITH &lt;option&gt; ( AND &lt;option&gt;)* )?
+
+&lt;column-definition&gt; ::= &lt;identifier&gt; &lt;type&gt; ( STATIC )? ( PRIMARY KEY )?
+                      | PRIMARY KEY '(' &lt;partition-key&gt; ( ',' &lt;identifier&gt; )* ')'
+
+&lt;partition-key&gt; ::= &lt;identifier&gt;
+                  | '(' &lt;identifier&gt; (',' &lt;identifier&gt; )* ')'
+
+&lt;option&gt; ::= &lt;property&gt;
+           | COMPACT STORAGE
+           | CLUSTERING ORDER
+</pre></pre>
+        <p>
+            <br/><i>Sample:</i>
+        </p><pre class="sample"><pre>CREATE TABLE monkeySpecies (
+    species text PRIMARY KEY,
+    common_name text,
+    population varint,
+    average_size int
+) WITH comment='Important biological records'
+   AND read_repair_chance = 1.0;
+
+CREATE TABLE timeline (
+    userid uuid,
+    posted_month int,
+    posted_time uuid,
+    body text,
+    posted_by text,
+    PRIMARY KEY (userid, posted_month, posted_time)
+) WITH compaction = { 'class' : 'LeveledCompactionStrategy' };
+</pre></pre>
+        <p>
+            <br/>CREATE TABLEステートメントは新しくテーブルを作る。それぞれのテーブルは行の集合である。CREATE COLUMNTABLEシンタックスはCREATE TABLEのエイリアスとしてサポートされている（これまでの開発の経緯からの理由で）。</p>
+        <p>IF NOT EXISTSを使わずに既存のテーブルと同じ名前でテーブルを作ろうとするとエラーが返される。使った場合で、すでに同名のテーブルが存在するなら、そのステートメントはなにもしない。</p>
+        <h4 id="createTableName"><code>&lt;tablename></code></h4>
+        <p>テーブルの名前として使えるのはキースペースと同じ条件である（32文字以内で英数字）。もしテーブルの名前だけで宣言されたなら、それは現在のキースペース内で作られる。既存のキースペースと共に宣言されればそのキースペースに作られる。</p>
+        <h4 id="createTableColumn"><code>&lt;column-definition></code></h4>
+        <p>CREATE TABLEステートメントはテーブルに入る行の列を定義する。列はその名前と型で宣言する。</p>
+        <p>テーブル内において、行は固有のPRIMARY KEYで識別される。そして行の定義時にはPRIMARY KEYも定義することが必須である。PRIMARY KEYとしてテーブル内の複数の列を指定することもできる。もしPRIMARY KEYが一つの列ならば、列定義の際に後ろにPRIMARY KEYを付ければいい。複数の列を使うなら、コンマ区切りのリストで定義する必要がある。</p><pre class="sample"><pre>CREATE TABLE t (
+    k int PRIMARY KEY,
+    other text
+)
+</pre></pre>
+        <p>is equivalent to</p><pre class="sample"><pre>CREATE TABLE t (
+    k int,
+    other text,
+    PRIMARY KEY (k)
+)
+</pre></pre>
+        <h4 id="createTablepartitionClustering">Partition key and clustering columns</h4>
+        <p></p>CQLでは列がPRIMARY KEYの並び順を決める。最初の列のキーをパーティションキーと呼ぶ。パーティションキーにはすべての行で同じパーティションキーを（テーブルさえまたがって）同じ物理ノードでは共有するという特徴がある。与えられたテーブルでの同一のパーティションキーを共有する行への挿入、更新、消去は分離されアトミックに行われる。パーティションキーは丸括弧を使うことで、複数の列から作ることもできる。</p>
+    <h4 id="createTableStatic"><code>STATIC</code> columns</h4>
+    <p>いくつかの列はテーブル定義時STATICとして宣言できる。静的な列は同じパーティションにある持つ行の間で共有される:</p><pre class="sample"><pre>CREATE TABLE test (
+    pk int,
+    t int,
+    v text,
+    s text static,
+    PRIMARY KEY (pk, t)
+);
+INSERT INTO test(pk, t, v, s) VALUES (0, 0, 'val0', 'static0');
+INSERT INTO test(pk, t, v, s) VALUES (0, 1, 'val1', 'static1');
+SELECT * FROM test WHERE pk=0 AND t=0;
+</pre></pre>
+    <p>最後のクエリはsの値としてstatic1を返す。なぜならsは静的で共有されている値であり、ここに書き込まれた最新の値はstatic1だからである。もしこの例での二つの行が異なるパーティションにあるなら（たとえばpkの値が異なるとき）、二度目のsへの書き込みによって最初の行のデータが代わるようなことはない。</p>
+    <p>静的な列に関していくつか制約がある:</p>
+    <ul>
+        <li>COMPACT STORAGEオプションを適用したテーブルは静的な列を使えない</li>
+        <li>クラスタリングされたカラムのないテーブルは静的な列を使えない。</li>
+        <li>PRIMARY KEYでない列だけが静的にできる</li>
+    </ul>
+    <h4 id="createTableOptions"><code>&lt;option></code></h4>
+    <p>CREATE TABLEステートメントは新しいテーブルを作成する際のいくつものオプションをサポートしている。これはWITHキーワードとともに使う。</p>
+    <p>オプションの中で最初にあるのはCOMPACT STORAGEである。CQL3以前のものとの互換を目的としたものである（詳細はwww.datastax.com/dev/blog/thrift-to-cql3）。これはディスクに保存されるデータのレイアウトをコンパクトにするものだが、テーブルの柔軟性や拡張性を落とす。COMPACT STORAGEのテーブルはコレクションや静的な列を持てず、少なくともクラスタリングされた列を一つだけ（0でも2以上でもなく）PRIMARY KEY以外でサポートしている。以上の理由から古いものを後方互換で動かす以外では使用が推奨されていない。</p>
+    <p>CLUSTERING OF|RDERというオプションがある。これはディスク上に保存される行データのオーダーに関わってくる。クラスタリングされた列の名前リストとともに使い、それらのオーダーをどうするかを決める（ascかdescか）。このオプションはSELECTのORDER BYが返す結果に影響を与える。</p>
+    <p>テーブル作成において&lt;property&gt;でサポートされるのは以下がある:</p>
+    <table>
+        <tr>
+            <th>option</th>
+            <th>kind</th>
+            <th>default</th>
+            <th>description</th>
+        </tr>
+        <tr>
+            <td><code>comment</code> 
+            </td>
+            <td><em>simple</em> 
+            </td>
+            <td>none</td>
+            <td>A free-form, human-readable comment.</td>
+        </tr>
+        <tr>
+            <td><code>read_repair_chance</code> 
+            </td>
+            <td><em>simple</em> 
+            </td>
+            <td>0.1</td>
+            <td>The probability with which to query extra nodes (e.g. more nodes than required by the consistency level) for the purpose of read repairs.</td>
+        </tr>
+        <tr>
+            <td><code>dclocal_read_repair_chance</code> 
+            </td>
+            <td><em>simple</em> 
+            </td>
+            <td>0</td>
+            <td>The probability with which to query extra nodes (e.g. more nodes than required by the consistency level) belonging to the same data center than the read coordinator for the purpose of read repairs.</td>
+        </tr>
+        <tr>
+            <td><code>gc_grace_seconds</code> 
+            </td>
+            <td><em>simple</em> 
+            </td>
+            <td>864000</td>
+            <td>Time to wait before garbage collecting tombstones (deletion markers).</td>
+        </tr>
+        <tr>
+            <td><code>bloom_filter_fp_chance</code> 
+            </td>
+            <td><em>simple</em> 
+            </td>
+            <td>0.00075</td>
+            <td>The target probability of false positive of the sstable bloom filters. Said bloom filters will be sized to provide the provided probability (thus lowering this value impact the size of bloom filters in-memory and on-disk)</td>
+        </tr>
+        <tr>
+            <td><code>compaction</code> 
+            </td>
+            <td><em>map</em> 
+            </td>
+            <td><em>see below</em> 
+            </td>
+            <td>The compaction options to use, see below.</td>
+        </tr>
+        <tr>
+            <td><code>compression</code> 
+            </td>
+            <td><em>map</em> 
+            </td>
+            <td><em>see below</em> 
+            </td>
+            <td>Compression options, see below.</td>
+        </tr>
+        <tr>
+            <td><code>replicate_on_write</code> 
+            </td>
+            <td><em>simple</em> 
+            </td>
+            <td>true</td>
+            <td>Whether to replicate data on write. This can only be set to false for tables with counters values. Disabling this is dangerous and can result in random lose of counters, don&#8217;t disable unless you are sure to know what you are doing</td>
+        </tr>
+        <tr>
+            <td><code>caching</code> 
+            </td>
+            <td><em>simple</em> 
+            </td>
+            <td>keys_only</td>
+            <td>Whether to cache keys (&#8220;key cache&#8221;) and/or rows (&#8220;row cache&#8221;) for this table. Valid values are: <code>all</code>, <code>keys_only</code>, <code>rows_only</code> and <code>none</code>.</td>
+        </tr>
+    </table>
+    <h4 id="compactionOptions"><code>compaction</code> options</h4>
+    <p>compactionプロパティは少なくともclassサブオプションを定義しなければならない。classサブオプションはコンパクションストラテジクラスを使うかを決定する。デフォルトでサポートされるのはSizeTieredCompactionStrategyとLeveledCompactionStrategyである。カスタムストラテジはstring constantによるクラス名で用意される。残りのサブオプションは選んだクラスによって変わる。残りのサブオプションは以下である:</p>
+    <table>
+        <tr>
+            <th>option</th>
+            <th>supported compaction strategy</th>
+            <th>default</th>
+            <th>description</th>
+        </tr>
+        <tr>
+            <td><code>enabled</code> 
+            </td>
+            <td><em>all</em> 
+            </td>
+            <td>true</td>
+            <td>A boolean denoting whether compaction should be enabled or not.</td>
+        </tr>
+        <tr>
+            <td><code>tombstone_threshold</code> 
+            </td>
+            <td><em>all</em> 
+            </td>
+            <td>0.2</td>
+            <td>A ratio such that if a sstable has more than this ratio of gcable tombstones over all contained columns, the sstable will be compacted (with no other sstables) for the purpose of purging those tombstones.</td>
+        </tr>
+        <tr>
+            <td><code>tombstone_compaction_interval</code> 
+            </td>
+            <td><em>all</em> 
+            </td>
+            <td>1 day</td>
+            <td>The minimum time to wait after an sstable creation time before considering it for &#8220;tombstone compaction&#8221;, where &#8220;tombstone compaction&#8221; is the compaction triggered if the sstable has more gcable tombstones than <code>tombstone_threshold</code>.</td>
+        </tr>
+        <tr>
+            <td><code>min_sstable_size</code> 
+            </td>
+            <td>SizeTieredCompactionStrategy</td>
+            <td>50MB</td>
+            <td>The size tiered strategy groups SSTables to compact in buckets. A bucket groups SSTables that differs from less than 50% in size. However, for small sizes, this would result in a bucketing that is too fine grained. <code>min_sstable_size</code> defines a size threshold (in bytes) below which all SSTables belong to one unique bucket</td>
+        </tr>
+        <tr>
+            <td><code>min_threshold</code> 
+            </td>
+            <td>SizeTieredCompactionStrategy</td>
+            <td>4</td>
+            <td>Minimum number of SSTables needed to start a minor compaction.</td>
+        </tr>
+        <tr>
+            <td><code>max_threshold</code> 
+            </td>
+            <td>SizeTieredCompactionStrategy</td>
+            <td>32</td>
+            <td>Maximum number of SSTables processed by one minor compaction.</td>
+        </tr>
+        <tr>
+            <td><code>bucket_low</code> 
+            </td>
+            <td>SizeTieredCompactionStrategy</td>
+            <td>0.5</td>
+            <td>Size tiered consider sstables to be within the same bucket if their size is within [average_size * <code>bucket_low</code>, average_size * <code>bucket_high</code> ] (i.e the default groups sstable whose sizes diverges by at most 50%)</td>
+        </tr>
+        <tr>
+            <td><code>bucket_high</code> 
+            </td>
+            <td>SizeTieredCompactionStrategy</td>
+            <td>1.5</td>
+            <td>Size tiered consider sstables to be within the same bucket if their size is within [average_size * <code>bucket_low</code>, average_size * <code>bucket_high</code> ] (i.e the default groups sstable whose sizes diverges by at most 50%).</td>
+        </tr>
+        <tr>
+            <td><code>sstable_size_in_mb</code> 
+            </td>
+            <td>LeveledCompactionStrategy</td>
+            <td>5MB</td>
+            <td>The target size (in MB) for sstables in the leveled strategy. Note that while sstable sizes should stay less or equal to <code>sstable_size_in_mb</code>, it is possible to exceptionally have a larger sstable as during compaction, data for a given partition key are never split into 2 sstables</td>
+        </tr>
+    </table>
+    <p>compressionプロパティのサブオプションとして下記が設定できる:</p>
+    <table>
+        <tr>
+            <th>option</th>
+            <th>default</th>
+            <th>description</th>
+        </tr>
+        <tr>
+            <td><code>sstable_compression</code> 
+            </td>
+            <td>LZ4Compressor</td>
+            <td>The compression algorithm to use. Default compressor are: LZ4Compressor, SnappyCompressor and DeflateCompressor. Use an empty string (<code>''</code>) to disable compression. Custom compressor can be provided by specifying the full class name as a <a href="#constants">string constant</a>.</td>
+        </tr>
+        <tr>
+            <td><code>chunk_length_kb</code> 
+            </td>
+            <td>64KB</td>
+            <td>On disk SSTables are compressed by block (to allow random reads). This defines the size (in KB) of said block. Bigger values may improve the compression rate, but increases the minimum size of data to be read from disk for a read</td>
+        </tr>
+        <tr>
+            <td><code>crc_check_chance</code> 
+            </td>
+            <td>1.0</td>
+            <td>When compression is enabled, each compressed block includes a checksum of that block for the purpose of detecting disk bitrot and avoiding the propagation of corruption to other replica. This option defines the probability with which those checksums are checked during read. By default they are always checked. Set to 0 to disable checksum checking and to 0.5 for instance to check them every other read</td>
+        </tr>
+    </table>
+    <h4 id="Otherconsiderations">Other considerations:</h4>
+    <ul>
+        <li>すでに定義されている行にデータを入れたい場合、すべての列が必要になるわけではない（キーの一部になっているものは必要）。値を持たない列はディスク上にスペースを取らない。さらに、新しい列を加えるには、一定時間しか要さない。テーブルを作っているときに将来の使用量予測を試みる必要はないだろう。</li>
+    </ul>
+    <h3 id="alterTableStmt">ALTER TABLE</h3>
+    <p><i>Syntax:</i>
+    </p><pre class="syntax"><pre>&lt;alter-table-stmt&gt; ::= ALTER (TABLE | COLUMNFAMILY) &lt;tablename&gt; &lt;instruction&gt;
+
+&lt;instruction&gt; ::= ALTER &lt;identifier&gt; TYPE &lt;type&gt;
+                | ADD   &lt;identifier&gt; &lt;type&gt;
+                | DROP  &lt;identifier&gt;
+                | WITH  &lt;option&gt; ( AND &lt;option&gt; )*
+</pre></pre>
+    <p>
+        <br/><i>Sample:</i>
+    </p><pre class="sample"><pre>ALTER TABLE addamsFamily
+ALTER lastKnownLocation TYPE uuid;
+
+ALTER TABLE addamsFamily
+ADD gravesite varchar;
+
+ALTER TABLE addamsFamily
+WITH comment = 'A most excellent and useful column family'
+ AND read_repair_chance = 0.2;
+</pre></pre>
+    <p>
+        <br/>ALTER TABLEステートメントはテーブル定義を操作するために使う。新しい列を加える、既存の列を消す、列の型を変える、あるいはテーブルオプションを新しくするなど。テーブル作成と同様、ALTER COLUNFAMILYはALTER TABLEのエイリアスである。</p>
+    <p>&lt;tablename&gt;はキースペース名に先行するオプションである。&lt;instruction&gt;はどういう変更を施すかを定義する:</p>
+    <ul>
+        <li>ALTER:既に定義された列の型を新しくする。clustering columnsの型は変更できない。secondary indexが作成されている列も同じ制限がある。他の列に関しては制限はないが、互換性のない型への変換は悪い案である。CQLドライバが混乱する原因となる。</li>
+        <li>ADD:テーブルへ新しく列を追加する。新しい列の&lt;identifier&gt;はすでにある列と混乱するものであってはならない。さらにCOMPACT STORAGEオプションが選択されたテーブルには列を加えられない。</li>
+        <li>DROP:テーブルから列を消去する。消去された列はただちにクエリで使えなくなる。もし列が読み込まれれば、クエリは消去される直前の値を返すわけではない。タイムスタンプは正確な時刻を表すので、消去された列を読むべきではない。COMPACT STORAGEオプションが選択されたテーブルでは列を消去することはできない。</li>
+        <li>WITH:テーブルのオプションを変更する。サポートされているオプションはCREATE TABLEと同じだが、COMPACT STORAGEはサポートされていない。あらゆるcompactionサブオプションは、すでに設定されていたcompactionオプションを上書きする。だから残したい設定があるなら、新たな設定をする前に、すでにされた設定を調べておかなければならない。compressionオプションについても同じである。</li>
+    </ul>
+    <h3 id="dropTableStmt">DROP TABLE</h3>
+    <p><i>Syntax:</i>
+    </p><pre class="syntax"><pre>&lt;drop-table-stmt&gt; ::= DROP TABLE ( IF EXISTS )? &lt;tablename&gt;
+</pre></pre>
+    <p><i>Sample:</i>
+    </p><pre class="sample"><pre>DROP TABLE worldSeriesAttendees;
+</pre></pre>
+    <p>DROP TABLEステートメントは即座にテーブルをテーブル内のデータとともに消去し、結果を巻き戻すことはできない。テーブル作成と同様にDROP COLUMNFAMILYはDROP TABLEのエイリアスである。</p>
+    <p>IF EXISTSを使わずに存在しないテーブルを消去しようとするとエラーを返す。</p>
+    <h3 id="truncateStmt">TRUNCATE</h3>
+    <p><i>Syntax:</i>
+    </p><pre class="syntax"><pre>&lt;truncate-stmt&gt; ::= TRUNCATE &lt;tablename&gt;
+</pre></pre>
+    <p><i>Sample:</i>
+    </p><pre class="sample"><pre>TRUNCATE superImportantData;
+</pre></pre>
+    <p>TRUNCATEステートメントはテーブルからすべてのデータを消す。</p>
+    <h3 id="createIndexStmt">CREATE INDEX</h3>
+    <p><i>Syntax:</i>
+    </p><pre class="syntax"><pre>&lt;create-index-stmt&gt; ::= CREATE ( CUSTOM )? INDEX ( IF NOT EXISTS )? &lt;identifier&gt;? ON &lt;tablename&gt; '(' &lt;identifier&gt; ')'
+                                        ( USING &lt;string&gt; ( WITH OPTIONS = &lt;map-literal&gt; )? )?
+</pre></pre>
+    <p><i>Sample:</i>
+    </p><pre class="sample"><pre>CREATE INDEX userIndex ON NerdMovies (user);
+CREATE INDEX ON Mutants (abilityId);
+CREATE CUSTOM INDEX ON users (email) USING 'path.to.the.IndexClass';
+CREATE CUSTOM INDEX ON users (email) USING 'path.to.the.IndexClass' WITH OPTIONS = {'storage': '/mnt/ssd/indexes/'};
+</pre></pre>
+    <p>CREATE INDEXステートメントはセカンダリインデックスを作るのにつかわれる。インデックスを作るカラムの名前の前にONを使う。もしデータがすでにあるならば、非同期でインデックス化が行われる。インデックスが作られたあとで、新しいデータが列に入れられると、データ挿入と共に自動でインデックスに入れられる。</p>
+    <p>すでにインデックスが存在しているのにこのステートメントを使うとエラーを返す。このエラーはIF NOT EXISTSを使えば回避される。</p>
+    <h3 id="dropIndexStmt">DROP INDEX</h3>
+    <p><i>Syntax:</i>
+    </p><pre class="syntax"><pre>&lt;drop-index-stmt&gt; ::= DROP INDEX ( IF EXISTS )? &lt;identifier&gt;
+</pre></pre>
+    <p><i>Sample:</i>
+    </p><pre class="sample"><pre>DROP INDEX userIndex;
+</pre></pre>
+    <p>DROP INDEXステートメントはすでにあるセカンダリインデックスを消去するために使う。引数として消したいインデックスの名前を使う。IF EXISTSを使わずに存在しないインデックスを消去しようとするとエラーを返す。</p>
+    <h2 id="dataManipulation">Data Manipulation</h2>
+    <h3 id="insertStmt">INSERT</h3>
+    <p><i>Syntax:</i>
+    </p><pre class="syntax"><pre>&lt;insertStatement&gt; ::= INSERT INTO &lt;tablename&gt;
+                             '(' &lt;identifier&gt; ( ',' &lt;identifier&gt; )* ')'
+                      VALUES '(' &lt;term-or-literal&gt; ( ',' &lt;term-or-literal&gt; )* ')'
+                      ( IF NOT EXISTS )?
+                      ( USING &lt;option&gt; ( AND &lt;option&gt; )* )?
+
+&lt;term-or-literal&gt; ::= &lt;term&gt;
+                    | &lt;collection-literal&gt;
+
+&lt;option&gt; ::= TIMESTAMP &lt;integer&gt;
+           | TTL &lt;integer&gt;
+</pre></pre>
+    <p>
+        <br/><i>Sample:</i>
+    </p><pre class="sample"><pre>INSERT INTO NerdMovies (movie, director, main_actor, year)
+                VALUES ('Serenity', 'Joss Whedon', 'Nathan Fillion', 2005)
+USING TTL 86400;
+</pre></pre>
+    <p>INSERTステートメントは与えられた行への新しい列データの挿入を行う。行はPRIMARY KEYで特定されるもので、列は少なくともPRIMARY KEYを構成できるデータが必要になる。</p>
+    <p>SQLとの違いとして、INSERTは行の存在チェックを行わず、あるならアップデート、なければ新しく作成される。データの作成が行われたかアップデートが行われたかを突き止める価値はない。</p>
+    <p>挿入のみを行うためにIF NOT EXISTSを使うこともできる。しかしIF NOT EXISTSを使うと無視できないほどのパフォーマンスコストを支払うことになるので、使用は慎重に行いたい。</p>
+    <p>挿入によるすべてのアップデート処理はアトミックに独立して行われる。
+        <p>UPDATEセクションを参照し、&lt;option&gt;で使用できるものの情報を得て、collectionsセクションで&lt;collection-literal&gt;の使い方も参照してほしい。またINSERTは、UPDATEのようなカウンターをサポートしていない。</p>
+        <h3 id="updateStmt">UPDATE</h3>
+        <p><i>Syntax:</i>
+        </p><pre class="syntax"><pre>&lt;update-stmt&gt; ::= UPDATE &lt;tablename&gt;
+                  ( USING &lt;option&gt; ( AND &lt;option&gt; )* )?
+                  SET &lt;assignment&gt; ( ',' &lt;assignment&gt; )*
+                  WHERE &lt;where-clause&gt;
+                  ( IF &lt;condition&gt; ( AND condition )* )?
+
+&lt;assignment&gt; ::= &lt;identifier&gt; '=' &lt;term&gt;
+               | &lt;identifier&gt; '=' &lt;identifier&gt; ('+' | '-') (&lt;int-term&gt; | &lt;set-literal&gt; | &lt;list-literal&gt;)
+               | &lt;identifier&gt; '=' &lt;identifier&gt; '+' &lt;map-literal&gt;
+               | &lt;identifier&gt; '[' &lt;term&gt; ']' '=' &lt;term&gt;
+
+&lt;condition&gt; ::= &lt;identifier&gt; '=' &lt;term&gt;
+              | &lt;identifier&gt; '[' &lt;term&gt; ']' '=' &lt;term&gt;
+
+&lt;where-clause&gt; ::= &lt;relation&gt; ( AND &lt;relation&gt; )*
+
+&lt;relation&gt; ::= &lt;identifier&gt; '=' &lt;term&gt;
+             | &lt;identifier&gt; IN '(' ( &lt;term&gt; ( ',' &lt;term&gt; )* )? ')'
+             | &lt;identifier&gt; IN '?'
+
+&lt;option&gt; ::= TIMESTAMP &lt;integer&gt;
+           | TTL &lt;integer&gt;
+</pre></pre>
+        <p>
+            <br/><i>Sample:</i>
+        </p><pre class="sample"><pre>UPDATE NerdMovies USING TTL 400
+SET director = 'Joss Whedon',
+    main_actor = 'Nathan Fillion',
+    year = 2005
+WHERE movie = 'Serenity';
+
+UPDATE UserActions SET total = total + 2 WHERE user = B70DE1D0-9908-4AE3-BE34-5573E5B09F14 AND action = 'click';
+</pre></pre>
+        <p>
+            <br/>UPDATEステートメントは指定された行データに任意の数の列を書き込む。&lt;where-clause&gt;は更新する行を絞るために使い、PRIMARY KEYを含んだものでなければならない（INリレーションはパーティションキーの最後の列に対してのみサポートされている）。他の列の値はSETk-ワードの後の&lt;assignment&gt;によって指定される。</p>
+        <p>SQLとの違いとして、UPDATEは行の存在チェックを行わず、あるならアップデート、なければ新しく作成される。データの作成が行われたかアップデートが行われたかを突き止める価値はない。</p>
+        <p>更新のみを行うためにIFを使うこともできる。しかしIFを使うと無視できないほどのパフォーマンスコストを支払うことになるので、使用は慎重に行いたい。</p>
+        <p>挿入によるすべてのアップデート処理はアトミックに独立して行われる。</p>
+        <p>&lt;assignment&gt;におけるc=c+3という式はカウンタの更新を行う。'='のあとの前後の識別子は必須である（カウンタについてはインクリメント、デクリメントのみが可能で、値を適用することはできない）。</p>
+        <p>The <code>id = id + &lt;collection-literal></code> and <code>id[value1] = value2</code> forms of <code>&lt;assignment></code> are for collections. Please refer to the <a href="#collections">relevant section</a> for more details.</p>
+        <h4 id="updateOptions"><code>&lt;options></code></h4>
+        <p>UPDATEとINSERTは挿入において以下に従う:</p>
+        <ul>
+            <li>TIMESTAMP:処理のためにタイムスタンプをセットする。とくに記述しなければ現在の時刻（マイクロ秒で）が使われる。</li>
+            <li>TTL:挿入される値に関してTime To Liveを与える。もしセットされれば、その指定時刻経過後に挿入されたデータが消去される。TTLは列自身に与えられるものではない。これが意味するのは、それ以降のいかなる処理も列を更新し、TTLをリセットするということである（TTLは行われた更新に記述された、新たなTTLの値に従う）。デフォルトでは値は消去されない。TTLの値としての0以下の数値はTTLをセットしないことと同義である。</li>
+        </ul>
+        <h3 id="deleteStmt">DELETE</h3>
+        <p><i>Syntax:</i>
+        </p><pre class="syntax"><pre>&lt;delete-stmt&gt; ::= DELETE ( &lt;selection&gt; ( ',' &lt;selection&gt; )* )?
+                  FROM &lt;tablename&gt;
+                  ( USING TIMESTAMP &lt;integer&gt;)?
+                  WHERE &lt;where-clause&gt;
+                  ( IF ( EXISTS | ( &lt;condition&gt; ( AND &lt;condition&gt; )*) ) )?
+
+&lt;selection&gt; ::= &lt;identifier&gt; ( '[' &lt;term&gt; ']' )?
+
+&lt;where-clause&gt; ::= &lt;relation&gt; ( AND &lt;relation&gt; )*
+
+&lt;relation&gt; ::= &lt;identifier&gt; '=' &lt;term&gt;
+             | &lt;identifier&gt; IN '(' ( &lt;term&gt; ( ',' &lt;term&gt; )* )? ')'
+             | &lt;identifier&gt; IN '?'
+
+&lt;condition&gt; ::= &lt;identifier&gt; '=' &lt;term&gt;
+              | &lt;identifier&gt; '[' &lt;term&gt; ']' '=' &lt;term&gt;
+</pre></pre>
+        <p>
+            <br/><i>Sample:</i>
+        </p><pre class="sample"><pre>DELETE FROM NerdMovies USING TIMESTAMP 1240003134 WHERE movie = 'Serenity';
+
+DELETE phone FROM Users WHERE userid IN (C73DE1D3-AF08-40F3-B124-3FF3E5109F22, B70DE1D0-9908-4AE3-BE34-5573E5B09F14);
+</pre></pre>
+        <p>
+            <br/>DELETEステートメントは列と行を消去する。もし列の名前がDELETEの直後にあれば、その列だけが行から消される。&lt;where-clause&gt;で消去するデータを選択できる（&lt;selection&gt;でのid[value]シンタクスはコレクションに使われる。詳しくはcollectionセクションを参照）。でなければ全ての行が消去される。&lt;where-clause&gt;は消去する行のキーを指定する（INリレーションはパーティションキーの最後の列に対してのみサポートされている）。</p>
+        <p>DELETEはUPDATEと同様にTIMESTAMPオプションをサポートする。</a>statement.</p>
+        <h3 id="batchStmt">BATCH</h3>
+        <p><i>Syntax:</i>
+        </p><pre class="syntax"><pre>&lt;batch-stmt&gt; ::= BEGIN ( UNLOGGED | COUNTER ) BATCH
+                 ( USING &lt;option&gt; ( AND &lt;option&gt; )* )?
+                    &lt;modification-stmt&gt; ( ';' &lt;modification-stmt&gt; )*
+                 APPLY BATCH
+
+&lt;modification-stmt&gt; ::= &lt;insert-stmt&gt;
+                      | &lt;update-stmt&gt;
+                      | &lt;delete-stmt&gt;
+
+&lt;option&gt; ::= TIMESTAMP &lt;integer&gt;
+</pre></pre>
+        <p>
+            <br/><i>Sample:</i>
+        </p><pre class="sample"><pre>BEGIN BATCH
+  INSERT INTO users (userid, password, name) VALUES ('user2', 'ch@ngem3b', 'second user');
+  UPDATE users SET password = 'ps22dhds' WHERE userid = 'user3';
+  INSERT INTO users (userid, password) VALUES ('user4', 'ch@ngem3c');
+  DELETE name FROM users WHERE userid = 'user1';
+APPLY BATCH;
+</pre></pre>
+        <p>BATCHステートメントは複数の操作（挿入、更新、消去）を一つのステートメントにまとめる。これの主な目的は二つある:</p>
+        <ol>
+            <li>クライアントとサーバ（あるいは調整サーバとレプリカ）のネットワーク間でのやり取りを抑える。</li>
+            <li>BATCHで与えられたパーティションキーによるすべての更新は分離しアトミックに動作する</li>
+            <li>デフォルトではバッチでのすべての処理はアトミックに行われる。</li>
+        </ol>
+        <p>BATCHステートメントはUPDATE、INSERT、DELETEのみをサポートし、SQLトランザクションすべてをサポートするわけではない。</li>
+            <li>タイムスタンプの記述がなければ、すべてのオペレーションには同じタイムスタンプが付与される。</li>
+            </ul>
+            <p>BATCHはTIMESTAMPオプションを、UPDATEステートメントと似たセマンティックでサポートする（タイムスタンプはバッチ内のステートメントによって適用される）。だがバッチ内のステートメントでTIMESTAMPを使ってはならない。</p>
+            <h2 id="queries">Queries</h2>
+            <h3 id="selectStmt">SELECT</h3>
+            <p><i>Syntax:</i>
+            </p><pre class="syntax"><pre>&lt;select-stmt&gt; ::= SELECT &lt;select-clause&gt;
+                  FROM &lt;tablename&gt;
+                  ( WHERE &lt;where-clause&gt; )?
+                  ( ORDER BY &lt;order-by&gt; )?
+                  ( LIMIT &lt;integer&gt; )?
+                  ( ALLOW FILTERING )?
+
+&lt;select-clause&gt; ::= DISTINCT? &lt;selection-list&gt;
+                  | COUNT '(' ( '*' | '1' ) ')' (AS &lt;identifier&gt;)?
+
+&lt;selection-list&gt; ::= &lt;selector&gt; (AS &lt;identifier&gt;)? ( ',' &lt;selector&gt; (AS &lt;identifier&gt;)? )*
+                   | '*'
+
+&lt;selector&gt; ::= &lt;identifier&gt;
+             | WRITETIME '(' &lt;identifier&gt; ')'
+             | TTL '(' &lt;identifier&gt; ')'
+             | &lt;function&gt; '(' (&lt;selector&gt; (',' &lt;selector&gt;)*)? ')'
+
+&lt;where-clause&gt; ::= &lt;relation&gt; ( AND &lt;relation&gt; )*
+
+&lt;relation&gt; ::= &lt;identifier&gt; &lt;op&gt; &lt;term&gt;
+             | '(' &lt;identifier&gt; (',' &lt;identifier&gt;)* ')' &lt;op&gt; &lt;term-tuple&gt;
+             | &lt;identifier&gt; IN '(' ( &lt;term&gt; ( ',' &lt;term&gt;)* )? ')'
+             | '(' &lt;identifier&gt; (',' &lt;identifier&gt;)* ')' IN '(' ( &lt;term-tuple&gt; ( ',' &lt;term-tuple&gt;)* )? ')'
+             | TOKEN '(' &lt;identifier&gt; ( ',' &lt;identifer&gt;)* ')' &lt;op&gt; &lt;term&gt;
+
+&lt;op&gt; ::= '=' | '&lt;' | '&gt;' | '&lt;=' | '&gt;='
+&lt;order-by&gt; ::= &lt;ordering&gt; ( ',' &lt;odering&gt; )*
+&lt;ordering&gt; ::= &lt;identifer&gt; ( ASC | DESC )?
+&lt;term-tuple&gt; ::= '(' &lt;term&gt; (',' &lt;term&gt;)* ')'
+</pre></pre>
+            <p>
+                <br/><i>Sample:</i>
+            </p><pre class="sample"><pre>SELECT name, occupation FROM users WHERE userid IN (199, 200, 207);
+
+SELECT name AS user_name, occupation AS user_occupation FROM users;
+
+SELECT time, value
+FROM events
+WHERE event_type = 'myEvent'
+  AND time > '2011-02-03'
+  AND time &lt;= '2012-01-01'
+
+SELECT COUNT(*) FROM users;
+
+SELECT COUNT(*) AS user_count FROM users;
+
+</pre></pre>
+            <p>
+                <br/>SELECTステートメントはテーブルの中の任意の数の行から、任意の数の列を読み込む。行のセットを返し、それらはクエリに対応した列のまとまりを持っている。</p>
+            <h4 id="selectSelection"><code>&lt;select-clause></code></h4>
+            <p>&lt;select-clause&gt;は必要な列を指定し、その結果のセットを返す。コンマ区切りで指定するか、ワイルドカード(*)を使う。</p>
+            <p>&lt;selector&gt;は取り出す列の名前か、任意の数の列の名前の&lt;function&gt;である。ファンクションについては&lt;term&gt;と同様で、functionセクションで記述する。加えてこれらの一般的なファンクションはWRITETIMEファンクションは列が挿入されたときに作られたタイムスタンプに従う。</p>
+            <p>いかなる&lt;selector&gt;もASキーワードを使うことでエイリアスとなる（サンプル参照）。&lt;where-clause&gt;と&lt;order-by&gt;で列を参照するときはオリジナルの名前で参照するべきで、エイリアスによって参照するべきではない。</p>
+            <p>COUNTキーワードは*を丸括弧でおおって使う。使った場合、クエリはマッチした行の数のみを返す。COUNT(1)はエイリアスとしてサポートされている。</p>
+            <h4 id="selectWhere"><code>&lt;where-clause></code></h4>
+            <p>&lt;where-clause&gt;にはクエリにかかる行を指定しなければならない。パーティションキーにおいて等価でない関係（INが単一の等価関係として使われた場合）はサポートされていない（だがパーティションキーにおいて非等価な関係のクエリを行うTOKENメソッドについて下で記している）。さらに、与えられたパーティションキーによってクラスタリングされた列は、行のオーダリングを行い、隣り合った行セットの選択のみが行われる。</p><pre class="sample"><pre>CREATE TABLE posts (
+    userid text,
+    blog_title text,
+    posted_at timestamp,
+    entry_title text,
+    content text,
+    category int,
+    PRIMARY KEY (userid, blog_title, posted_at)
+)
+</pre></pre>
+            <p>以下のクエリは問題ない:</p><pre class="sample"><pre>SELECT entry_title, content FROM posts WHERE userid='john doe' AND blog_title='John''s Blog' AND posted_at >= '2012-01-01' AND posted_at &lt; '2012-01-31'
+</pre></pre>
+            <p>以下のクエリは隣り合った行のセットが選択されておらず、クエリとして実行できない:</p><pre class="sample"><pre>// Needs a blog_title to be set to select ranges of posted_at
+SELECT entry_title, content FROM posts WHERE userid='john doe' AND posted_at >= '2012-01-01' AND posted_at &lt; '2012-01-31'
+</pre></pre>
+            <p>関係について詳しく述べると、TOKENファンクションはPARTITION KEYの列をクエリするのにつかわれる。その場合、行はその値でなくPARTITIONKEYのトークンで選択される。キーのトークンは使用するパーティションに依存しており、ランダムパーティションは意味のある順序付けを行わない。パーティションの順序付けは常にバイトごとのトークン値の順序付けを行う（たとえパーティションキーの型がintだとして、特にtoken(-1) &gt; token(0)でも）。例として:</p><pre class="sample"><pre>SELECT * FROM posts WHERE token(userid) > token('tom') AND token(userid) &lt; token('bob')
+</pre></pre>
+            <p>さらにINリレーションはパーティションキーの最後の列として、プライマリキーのフルセットで使うときにのみ有効である。</p>
+            <p>またCLUSTERING COLUMNをグループ化して使うこともできる:</p><pre class="sample"><pre>SELECT * FROM posts WHERE userid='john doe' AND (blog_title, posted_at) > ('John''s Blog', '2012-01-01')
+</pre></pre>
+            <p>これはblog_titleとして"John's Blog"という値をもち、posted_atに'2012-01-01'が入った行を返す。blog_title &gt; 'John''s Blog'としておけば、post_at &lt;= '2012-01-01'という条件の行が返される。以下のクエリのようにはならない:</p><pre class="sample"><pre>SELECT * FROM posts WHERE userid='john doe' AND blog_title > 'John''s Blog' AND posted_at > '2012-01-01'
+</pre></pre>
+            <p>The tuple notation may also be used for <code>IN</code> clauses on <code>CLUSTERING COLUMNS</code>:</p><pre class="sample"><pre>SELECT * FROM posts WHERE userid='john doe' AND (blog_title, posted_at) IN (('John''s Blog', '2012-01-01), ('Extreme Chess', '2014-06-01'))
+</pre></pre>
+            <h4 id="selectOrderBy"><code>&lt;order-by></code></h4>
+            <p>ORDER BYオプションはクエリ結果を順序付けするのに使う。列の名前を引数として取る。可能なオーダーは限られている（これはテーブルCLUSTERIG ORDERに依存している）:</p>
+            <ul>
+                <li>もしいかなるCLUSTERING ORDERの記載もないテーブルは、クラスタリングされた列とその逆順しか取れない。</li>
+                <li>それでなければ、オーダーはCLUSTERING ORDERオプションどおりか、その逆順となる。</li>
+            </ul>
+            <h4 id="selectLimit"><code>LIMIT</code></h4>
+            <p>SELECTステートメントのLIMITオプションは結果として返す行の数を制限できる。</p>
+            <h4 id="selectAllowFiltering"><code>ALLOW FILTERING</code></h4>
+            <p>デフォルトではCQLのSELECTクエリはフィルタリングを行わない。クエリは（生の）記録から（おそらく一部の）結果のセットを返す。フィルタをかけないクエリは決まった量の結果を返すため、実行時間が一定となる。</p>
+            <p>ALLOW FILTERINGオプションはクエリ結果のフィルタリングを行う。ALLOW FILTERINGは一握りのレコードを絞り出すためにクラスタにあるすべてのデータに検索をかけ、予期できないパフォーマンスコストを支払うことになる。</p>
+            <p>下記のテーブルはユーザーのプロフィール、生まれ年、国を保持している:</p><pre class="sample"><pre>CREATE TABLE users (
+    username text PRIMARY KEY,
+    firstname text,
+    lastname text,
+    birth_year int,
+    country text
+)
+
+CREATE INDEX ON users(birth_year);
+</pre></pre>
+            <p></p>
+            <p>下記のクエリは通る:</p><pre class="sample"><pre>SELECT * FROM users;
+SELECT firstname, lastname FROM users WHERE birth_year = 1981;
+</pre></pre>
+            <p>なぜならどちらも、これらで返されるクエリに費やすパフォーマンスコストは一定だからである。もし1981年に生れたユーザがいないなら、二つ目のクエリはデータベースに保存されたユーザプロフィールの量に依存しなくなる（少なくとも直接は関係なくなる：なぜならセカンダリインデックスの実行を考えると、このクエリはクラスタ内でのノード数に依存し、保存されたデータ量には直接は依存しない。それでもノード数は常に保存されるデータ数より小さくなる）。もちろんどちらのクエリも多量の結果セットを返すかもしれないが、返されるデータの量は常にLIMITを使うことで制限をかけられる。</p>
+            <p>下記のクエリは通らない:</p><pre class="sample"><pre>SELECT firstname, lastname FROM users WHERE birth_year = 1981 AND country = 'FR';
+</pre></pre>
+            <p>なぜならCassandraは多量のデータにスキャンをかけることはしないからである、たとえクエリに対する結果が少ないものであったとしても。たとえその中でフランス生まれが一握りであったとしても、1981年生まれのユーザすべてをスキャンせねばならない。もしあなたが、自分自身でなにをしようとしているかわかっているなら、ALLOW FILTERINGを末尾に付けることでクエリを実行できる:</p><pre class="sample"><pre>SELECT firstname, lastname FROM users WHERE birth_year = 1981 AND country = 'FR' ALLOW FILTERING;
+</pre></pre>
+            <h2 id="types">Data Types</h2>
+            <p>CQLは列の値として、コレクションを含む豊富な型をサポートしている。それらに加えて、ユーザはカスタムされた型も使用できる（JAVAのAbstractTypeを拡張したクラスで行われる）。シンタクスは以下のとおり：</p><pre class="syntax"><pre>&lt;type&gt; ::= &lt;native-type&gt;
+         | &lt;collection-type&gt;
+         | &lt;string&gt;       // Used for custom types. The fully-qualified name of a JAVA class
+
+&lt;native-type&gt; ::= ascii
+                | bigint
+                | blob
+                | boolean
+                | counter
+                | decimal
+                | double
+                | float
+                | inet
+                | int
+                | text
+                | timestamp
+                | timeuuid
+                | uuid
+                | varchar
+                | varint
+
+&lt;collection-type&gt; ::= list '&lt;' &lt;native-type&gt; '&gt;'
+                    | set  '&lt;' &lt;native-type&gt; '&gt;'
+                    | map  '&lt;' &lt;native-type&gt; ',' &lt;native-type&gt; '&gt;'
+</pre></pre>
+            <p>ネイティブな型は大文字小文字を判別する。それらは予約語ではない。</p>
+            <p>下の表はデータ型と型のサポート値に関してである：</p>
+            <table>
+                <tr>
+                    <th>type</th>
+                    <th>constants supported</th>
+                    <th>description</th>
+                </tr>
+                <tr>
+                    <td><code>ascii</code> 
+                    </td>
+                    <td>strings</td>
+                    <td>ASCII character string</td>
+                </tr>
+                <tr>
+                    <td><code>bigint</code> 
+                    </td>
+                    <td>integers</td>
+                    <td>64-bit signed long</td>
+                </tr>
+                <tr>
+                    <td><code>blob</code> 
+                    </td>
+                    <td>blobs</td>
+                    <td>Arbitrary bytes (no validation)</td>
+                </tr>
+                <tr>
+                    <td><code>boolean</code> 
+                    </td>
+                    <td>booleans</td>
+                    <td>true or false</td>
+                </tr>
+                <tr>
+                    <td><code>counter</code> 
+                    </td>
+                    <td>integers</td>
+                    <td>Counter column (64-bit signed value). See <a href="#counters">Counters</a> for details</td>
+                </tr>
+                <tr>
+                    <td><code>decimal</code> 
+                    </td>
+                    <td>integers, floats</td>
+                    <td>Variable-precision decimal</td>
+                </tr>
+                <tr>
+                    <td><code>double</code> 
+                    </td>
+                    <td>integers</td>
+                    <td>64-bit IEEE-754 floating point</td>
+                </tr>
+                <tr>
+                    <td><code>float</code> 
+                    </td>
+                    <td>integers, floats</td>
+                    <td>32-bit IEEE-754 floating point</td>
+                </tr>
+                <tr>
+                    <td><code>inet</code> 
+                    </td>
+                    <td>strings</td>
+                    <td>An IP address. It can be either 4 bytes long (IPv4) or 16 bytes long (IPv6). There is no <code>inet</code> constant, IP address should be inputed as strings</td>
+                </tr>
+                <tr>
+                    <td><code>int</code> 
+                    </td>
+                    <td>integers</td>
+                    <td>32-bit signed int</td>
+                </tr>
+                <tr>
+                    <td><code>text</code> 
+                    </td>
+                    <td>strings</td>
+                    <td>UTF8 encoded string</td>
+                </tr>
+                <tr>
+                    <td><code>timestamp</code>
+                    </td>
+                    <td>integers, strings</td>
+                    <td>A timestamp. Strings constant are allow to input timestamps as dates, see <a href="#usingdates">Working with dates</a> below for more information.</td>
+                </tr>
+                <tr>
+                    <td><code>timeuuid</code> 
+                    </td>
+                    <td>uuids</td>
+                    <td>Type 1 UUID. This is generally used as a &#8220;conflict-free&#8221; timestamp. Also see the <a href="#timeuuidFun">functions on Timeuuid</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>uuid</code> 
+                    </td>
+                    <td>uuids</td>
+                    <td>Type 1 or type 4 UUID</td>
+                </tr>
+                <tr>
+                    <td><code>varchar</code> 
+                    </td>
+                    <td>strings</td>
+                    <td>UTF8 encoded string</td>
+                </tr>
+                <tr>
+                    <td><code>varint</code> 
+                    </td>
+                    <td>integers</td>
+                    <td>Arbitrary-precision integer</td>
+                </tr>
+            </table>
+            <p>コレクションに関してもっと詳しい使い方は下のWorking with collectionsに示す。</p>
+            <h3 id="usingdates">Working with dates</h3>
+            <p>timestamp型の値は64ビットのサイン付き整数で、ミリセカンドを表す。これはエポックにもとづいている：January 1 1970 at 00:00:00 GMT.
+                <p>タイムスタンプはCQLでシンプルなlong整数で入力でき、先に示したエポックを基準としたミリセカンドで与えられる。</p>
+                <p>TまたISO8601のフォーマットで文字列で入力もでき、2011年3月2日午前4時5分GMTは下記の方法で記せる:</p>
+                <ul>
+                    <li><code>2011-02-03 04:05+0000</code>
+                    </li>
+                    <li><code>2011-02-03 04:05:00+0000</code>
+                    </li>
+                    <li><code>2011-02-03 04:05:00.000+0000</code>
+                    </li>
+                    <li><code>2011-02-03T04:05+0000</code>
+                    </li>
+                    <li><code>2011-02-03T04:05:00+0000</code>
+                    </li>
+                    <li><code>2011-02-03T04:05:00.000+0000</code>
+                    </li>
+                </ul>
+                <p>+0000はRFC822 4デジットタイムゾーン記法であり。+0000はGMTを示す。アメリカの太平洋側の標準時は-0800である。タイムゾーンは削除もでき、Cassandraノードは日付が基準点での値だと解釈する。</p>
+                <ul>
+                    <li><code>2011-02-03 04:05</code>
+                    </li>
+                    <li><code>2011-02-03 04:05:00</code>
+                    </li>
+                    <li><code>2011-02-03 04:05:00.000</code>
+                    </li>
+                    <li><code>2011-02-03T04:05</code>
+                    </li>
+                    <li><code>2011-02-03T04:05:00</code>
+                    </li>
+                    <li><code>2011-02-03T04:05:00.000</code>
+                    </li>
+                </ul>
+                <p>タイムゾーンの推定は難しいので、タイムスタンプには常にタイムゾーンが表記されることが推奨される。</p>
+                <p>もし日にちしか必要なければ下記のようにも書ける:</p>
+                <ul>
+                    <li><code>2011-02-03</code>
+                    </li>
+                    <li><code>2011-02-03+0000</code>
+                    </li>
+                </ul>
+                <p>この場合、時間は表記されたかデフォルトのタイムゾーンで00:00:00と解釈される。</p>
+                <h3 id="counters">Counters</h3>
+                <p>counter型はcounter columnを使うために定義する。カウンタ型となった列の値は64ビットの符号付整数で、二つの操作が可能である：インクリメントかデクリメントの（シンタクスはUPDATE参照）。カウンタの値をセットすることはできない。カウンタは最初のインクリメントかデクリメントをするまで存在せず、最初のそれを行うことによって前の値が0だったかのようにふるまう。カウンタの列を削除することはできるが、いくらかの制限がある（Cassandra Wikiを参照）。</p>
+                <p>カウンタ型を使うには以下の制限がある:</p>
+                <ul>
+                    <li>PRIMARY KEYの一つとしては使えない。</li>
+                    <li>カウンタを含むテーブルはカウンタしか含めない。言い換えれば、PRIMARY KEY以外のすべての列がテーブルの外にあれば、それはカウンタを持てる。でなければカウンタは持てない。</li>
+                </ul>
+                <h3 id="collections">Working with collections</h3>
+                <h4 id="Noteworthycharacteristics">Noteworthy characteristics</h4>
+                <p>コレクションは非正規化された小さな関係性のあるデータを、保存するためにある。たとえば"ユーザの電話番号"や"メールにつけるラベル"のようなものを扱うのによい。ただ際限なくデータが増えるアイテム（"すべてのユーザへのメッセージ"や"センサによって引き起こされたイベント"）は適していないので、ふさわしいテーブルを使って保存するべきである。コレクションには下記の制限がある:</p>
+                <ul>
+                    <li>コレクションは常にそれ全体を読み込む</li>
+                    <li>65535以上の要素を持つことはできない。正確に言えば65535個以上の要素に挿入はできるが、データを読めるのは最初の65535番目までである（CASSANDRA-5428参照）。</li>
+                    <li>setsとmapsへの挿入は内部で書き込み前に読み込みをし、listsでもいくらかの命令で同様のことをする（以下でlistのセクションを参照）。可能ならばlistsよりsetsを使うのが好ましい。 これらの制限は将来なくなるものがあるかもしれない。それでもコレクションのルールとして、非正規化された少量のデータの扱いを支えるものである。
+                    </li>
+                </ul>
+                <p>ここに書かれた制限は今後、緩和されることがあるかもしれない。</p>
+                <h4 id="map">Maps</h4>
+                <p>mapはキーとバリューのペアがセットになったものである。マップは常にキーによってソートされ、その結果が返される。map型の列を作る場合、コンマ区切りでキーとバリューのペアを、角括弧&lt;&gt;であたえる。</p><pre class="sample"><pre>CREATE TABLE users (
+    id text PRIMARY KEY,
+    given text,
+    surname text,
+    favs map&lt;text, text>   // A map of text keys, and text values
+)
+</pre></pre>
+                <p>mapの書き方はJSONのシンタクスと同様である。レコードをINSERTを使って書くとき、JSONのやり方で書けばいい。このやり方ではmapデータを丸々書き換えることに留意が必要。</em>
+                </p><pre class="sample"><pre>// Inserting (or Updating)
+INSERT INTO users (id, given, surname, favs)
+           VALUES ('jsmith', 'John', 'Smith', { 'fruit' : 'apple', 'band' : 'Beatles' })
+</pre></pre>
+                <p>mapへのキーバリューの追加、更新はUPDATEステートメントで行う。</p><pre class="sample"><pre>// Updating (or inserting)
+UPDATE users SET favs['author'] = 'Ed Poe' WHERE id = 'jsmith'
+UPDATE users SET favs = favs +  { 'movie' : 'Cassablanca' } WHERE id = 'jsmith'
+</pre></pre>
+                <p>TTLはINSERTにもUPDATEにも適用されるが、TTLは新しい挿入、更新によってセットされる値だけに有効である。例文で言い換える。</p><pre class="sample"><pre>// Updating (or inserting)
+UPDATE users USING TTL 10 SET favs['color'] = 'green' WHERE id = 'jsmith'
+</pre></pre>
+                <p>これはTTLを{ 'color' : 'green' }レコードのみに適用する。ほかのmap要素には影響しない。</p>
+                <p>mapレコードの削除は以下のように行う：</p><pre class="sample"><pre>DELETE favs['author'] FROM users WHERE id = 'jsmith'
+</pre></pre>
+                <h4 id="set">Sets</h4>
+                <p>set型はユニークな値のコレクションである。セットはその値によってソートされる。set型の列を作るには、入れるデータの型を角括弧&lt;&gt;で囲う。</p><pre class="sample"><pre>CREATE TABLE images (
+    name text PRIMARY KEY,
+    owner text,
+    date timestamp,
+    tags set&lt;text>
+);
+</pre></pre>
+                <p>setデータを書くにはコンマ区切りで値を置いていき、丸括弧で囲う。INSERTを使うと丸々セットを置き換える。</p><pre class="sample"><pre>INSERT INTO images (name, owner, date, tags)
+            VALUES ('cat.jpg', 'jsmith', 'now', { 'kitten', 'cat', 'pet' });
+</pre></pre>
+                <p>値の追加および削除はUPDATEで、setでカラムを指定して行う。</p><pre class="sample"><pre>UPDATE images SET tags = tags + { 'cute', 'cuddly' } WHERE name = 'cat.jpg';
+UPDATE images SET tags = tags - { 'lame' } WHERE name = 'cat.jpg';
+</pre></pre>
+                <p>mapsと同様、TTLは新しく挿入、更新される値に対してのみ有効である。</p>
+                <h4 id="list">Lists</h4>
+                <p>list型はユニークでない値の集合であり、順番が保持される。list型の列の値を作るには、listキーワードと共に角括弧で入れるデータの型を囲む。</p><pre class="sample"><pre>CREATE TABLE plays (
+    id text PRIMARY KEY,
+    game text,
+    players int,
+    scores list&lt;int>
+)
+</pre></pre>
+                <p>以下で説明するように、リストにはいくらかの制限とパフォーマンスでの考慮点があり、可能ならばリストよりセットを使うべきである。</p>
+                <p>listデータはJSONスタイルのシンタクスで書ける。INSERTを使って書くならJSONでの配列と同じ書き方をする。INSERTを使うとリストを丸々置き換える。</p><pre class="sample"><pre>INSERT INTO plays (id, game, players, scores)
+           VALUES ('123-afde', 'quake', 3, [17, 4, 2]);
+</pre></pre>
+                <p>値の追加（先頭か末尾への）は既存の列のlist要素への新しいJSONスタイルで記述する。</p><pre class="sample"><pre>UPDATE plays SET players = 5, scores = scores + [ 14, 21 ] WHERE id = '123-afde';
+UPDATE plays SET players = 5, scores = [ 12 ] + scores WHERE id = '123-afde';
+</pre></pre>
+                <p>appendやprependはベキ等性の処理ではない。これはappendかprependでタイムアウトすると、安全にリトライは行われない（これでレコードのappendやprependを二回行うことになる）ということである。</p>
+                <p>リストは以下の命令もできる：位置を指定してのデータセット、および消去、与えられた値に一致する要素すべての削除など。しかしこれに反して他のコレクションと異なり、この三つの命令は更新前に読み込みをし、パフォーマンスを落とす。この命令は以下のシンタクスで記す：</p><pre class="sample"><pre>UPDATE plays SET scores[1] = 7 WHERE id = '123-afde';                // sets the 2nd element of scores to 7 (raises an error is scores has less than 2 elements)
+DELETE scores[1] FROM plays WHERE id = '123-afde';                   // deletes the 2nd element of scores (raises an error is scores has less than 2 elements)
+UPDATE plays SET scores = scores - [ 12, 21 ] WHERE id = '123-afde'; // removes all occurrences of 12 and 21 from scores
+</pre></pre>
+                <p>mapsと同様、TTLは新しく挿入、更新された値に対してのみ有効である。</p>
+                <h2 id="functions">Functions</h2>
+                <p>CQL3はいくらかのファンクションをサポートしている（今後も増える）。ファンクションは値に対してのみ有効で、個々の値を集約するようなファンクションはサポートしていない。サポートされているファンクションを以下に記す：</p>
+                <h3 id="tokenFun">Token</h3>
+                <p>tokenはファンクションは与えられたパーティションキーのトークンを計算する。トークンファンクションの正確な署名はクラスタに使われているテーブルと、そのパーティションに依存している。</p>
+                <p>tokenの引数の型はパーティションキーの列の値の型に依存する。返される型は使用しているパーティションに依存する：</p>
+                <ul>
+                    <li>Murmur3Partitionerはbigint型を返す</li>
+                    <li>RandomPartitionerはvarint型を返す</li>
+                    <li>ByteOrderedPartitionerはblob型を返す</li>
+                </ul>
+                <p>クラスタでデフォルトのMurmur3Partitionerを使い、以下のようにテーブルが定義されたとする。</p><pre class="sample"><pre>CREATE TABLE users (
+    userid text PRIMARY KEY,
+    username text,
+    ...
+)
+</pre></pre>
+                <p>このときtokenファンクションは一つのtext型の引数を取り（クラスタリングされた列はなく、パーティションキーはプライマリキーそのものである）、返される方はbigintである。</p>
+                <h3 id="uuidFun">Uuid</h3>
+                <p>uuid functionはパラメータなしにタイプ4のUUIDを作成する。</p>
+                <h3 id="timeuuidFun">Timeuuid functions</h3>
+                <h4 id="now"><code>now</code></h4>
+                <p>nowファンクションは引数を取らず、新しいユニークなtimeuuidを作る（ステートメントが使われるときに実行される）。このメソッドは便利だが、WHEREにおいてセンスのない使われ方をする。</p><pre class="sample"><pre>SELECT * FROM myTable WHERE t = now()
+</pre></pre>
+                <p>上記のクエリはなにも返さないだろう。返される値はユニークであることが保証されているのだから。</p>
+                <h4 id="minTimeuuidandmaxTimeuuid"><code>minTimeuuid</code> and <code>maxTimeuuid</code></h4>
+                <p>minTimeuuid（あるいはmaxTimeuuid）ファンクションはtimestampの値t（タイムスタンプか日付の文字列）を取り、そこから適切なもっとも小さい（あるいはもっとも大きい）偽のtimeuuidを作る。</p> <pre class="sample"><pre>SELECT * FROM myTable WHERE t > maxTimeuuid('2013-01-01 00:05+0000') AND t &lt; minTimeuuid('2013-02-02 10:00+0000')
+</pre></pre>
+                <p>上のクエリでのtimeuuidの値tは‘2013-01-01 00:05+0000’より古く、‘2013-02-02 10:00+0000’より若くなる。t &gt;= maxTimeuuid('2013-01-01 00:05+0000')は‘2013-01-01 00:05+0000’で作成されたtimeuuidを選択せず、本質的にはt &gt; maxTimeuuid('2013-01-01 00:05+0000')と書くことと等価である。</p>
+                <p>注意：minTimeuuidとmaxTimeuuidによって作成された値を偽のUUIDと読んだ。なぜならそれらはRFC 4122で決められた時間ベースのUUID作成プロセスを順守していないためである。実際、これら二つのメソッドはユニークな値を返さない。よってこれらはクエリのためだけに使うべきである（例はこれまでのサンプルで示した）。この結果を挿入したりするのは悪いアイディアである。</p>
+                <h4 id="dateOfandunixTimestampOf"><code>dateOf</code> and <code>unixTimestampOf</code></h4>
+                <p>dateOfファンクションとunixTimestampOfファンクションはtimeuuidを引数として取り、タイムスタンプを埋め込んだ出力を出す。だがdateOfファンクションはtimestamp型で値を返し、unixTimestampOfファンクションはbigint型で値を返す。</p>
+                <h3 id="blobFun">Blob conversion functions</h3>
+                <p>いくらかのファンクションはネイティブな型をバイナリデータ（blob）に変換する。すべての&lt;native-type&gt;typeはCQL3（例外としてblob）によってサポートされ、typeAsBlobファンクションはtype型の引数を取り、blobとしてそれを返す。反対に、blobAsTypeファンクションは64ビットのblobを引数に取り、それをbigint値に変換する。よってbigintAsBlob(3)は0x0000000000000003であり、blobAsBigint(0x0000000000000003)は3である。</p>
+                <br>
+                <p>翻訳メモ
+                    <br>アトミック（原始性）　-　一つのトランザクションで行われる手続きが個々に分断されず、ひとまとまりとして扱われること。アトミックに実行されるといえば、トランザクション完遂に必要な手続きがすべて行われ、失敗した場合は一つも行われないということになる。
+                </p>
+</body>
+
+</html>
