@@ -100,7 +100,7 @@
         <li>さらにバッカス記法の省略形として正規表現の標準的な記号?,+,*を任意、and、orの意味で使う。丸括弧は記号のグループ化に使い、[
             <characters>]と記したときは
                 <characters>に含まれるいずれか一つのキャラクターを表現しているとする</li>
-        <li>文法はドキュメント化のために使われるが、それでもマイナーな詳細をいくつか残している。たとえばCREATE TABLEステートメントでの最後の列定義はオプションであるがサポートされており、もしこのドキュメントで提供されている文法だとしてもおすすめはしていない。</li>
+        <li>文法はドキュメント化のために使われるが、それでもマイナーな詳細をいくつか残している。たとえばCREATE TABLEステートメントでの最後の列定義はオプションとしてサポートいるが、このドキュメントで提供されている文法でも推奨はしていない。</li>
         <li>サンプルコードはコードブロックによって示される:</li>
     </ul><pre class="sample"><pre>SELECT sample_usage FROM cql;
 </pre></pre>
@@ -172,12 +172,12 @@
 </pre></pre>
     <p>
         <br/>注意として、実際にすべてのケースで上記の文法が有効なわけではない。とくに、&lt;variable&gt;と入れ子にされた&lt;collection-literal&gt;は&lt;collection-literal&gt;のなかで有効ではない。</p>
-    <p>&lt;variable&gt;は匿名にもなれば名前を持つこともできる。どちらも準備ステートメントで変数と結び付けられる。匿名と命名済みの変数の違いは参照が楽になるかどうかだけである。</p>
+    <p>&lt;variable&gt;は匿名にもなれば名前を持つこともできる。どちらもプリペアードステートメントで変数と結び付けられる。匿名と命名済みの変数の違いは参照が楽になるかどうかだけである。</p>
     <p>&lt;properties&gt;はキースペースやテーブルを作ったり変更するのに使う。それぞれの&lt;property&gt;は単一の値かマッピングされた値を取る。詳しくはのちに触れる。</p>
     <p>&lt;tablename&gt;はテーブルの特定に使う。キースペースが指定されていない状態では、&lt;tablename&gt;はアクティブなキースペースの該当テーブルを指す（キースペースの指定はUSEを使う）。</p>
     <p>サポートされている&lt;function&gt;についてはfunctionsセクションを参照すること。</p>
     <h3 id="preparedStatement">Prepared Statement</h3>
-    <p>CQLは準備ステートメントをサポートしている。準備ステートメントはクエリを一度展開し、複数回違った値でそのクエリを実行するときに使う。
+    <p>CQLはプリペアードステートメントをサポートしている。プリペアードステートメントはクエリを一度展開し、複数回違った値でそのクエリを実行するときに使う。
         <p>ステートメントにおいて列の値が求められているなら、&lt;variable&gt;を使うことができる。その場合は変数を結びつけられたステートメントが必要となる。それが用意できれば、それに実際の値を与えることでそれを実行できる。これを使う実際の手続きはCQLドライバに依存しているもので、このドキュメントでこれ以降には載せていない。</p>
         <h2 id="dataDefinition">Data Definition</h2>
         <h3 id="createKeyspaceStmt">CREATE KEYSPACE</h3>
@@ -315,7 +315,7 @@ CREATE TABLE timeline (
         <h4 id="createTablepartitionClustering">Partition key and clustering columns</h4>
         <p></p>CQLでは列がPRIMARY KEYの並び順を決める。最初の列のキーをパーティションキーと呼ぶ。パーティションキーにはすべての行で同じパーティションキーを（テーブルさえまたがって）同じ物理ノードでは共有するという特徴がある。与えられたテーブルでの同一のパーティションキーを共有する行への挿入、更新、消去は分離されアトミックに行われる。パーティションキーは丸括弧を使うことで、複数の列から作ることもできる。</p>
     <h4 id="createTableStatic"><code>STATIC</code> columns</h4>
-    <p>いくつかの列はテーブル定義時STATICとして宣言できる。静的な列は同じパーティションにある持つ行の間で共有される:</p><pre class="sample"><pre>CREATE TABLE test (
+    <p>いくつかの列はテーブル定義時STATICとして宣言できる。静的な列は同じパーティションの複数の行の間で共有される:</p><pre class="sample"><pre>CREATE TABLE test (
     pk int,
     t int,
     v text,
@@ -551,7 +551,7 @@ WITH comment = 'A most excellent and useful column family'
         <br/>ALTER TABLEステートメントはテーブル定義を操作するために使う。新しい列を加える、既存の列を消す、列の型を変える、あるいはテーブルオプションを新しくするなど。テーブル作成と同様、ALTER COLUNFAMILYはALTER TABLEのエイリアスである。</p>
     <p>&lt;tablename&gt;はキースペース名に先行するオプションである。&lt;instruction&gt;はどういう変更を施すかを定義する:</p>
     <ul>
-        <li>ALTER:既に定義された列の型を新しくする。clustering columnsの型は変更できない。secondary indexが作成されている列も同じ制限がある。他の列に関しては制限はないが、互換性のない型への変換は悪い案である。CQLドライバが混乱する原因となる。</li>
+        <li>ALTER:既に定義された列の型を新しくする。clustering columnsの型は変更できない。secondary indexが作成されている列も同じ制限がある。他の列に関しては制限はないが、互換性のない型への変換は良いアイディアではない。CQLドライバが混乱する原因となる。</li>
         <li>ADD:テーブルへ新しく列を追加する。新しい列の&lt;identifier&gt;はすでにある列と混乱するものであってはならない。さらにCOMPACT STORAGEオプションが選択されたテーブルには列を加えられない。</li>
         <li>DROP:テーブルから列を消去する。消去された列はただちにクエリで使えなくなる。もし列が読み込まれれば、クエリは消去される直前の値を返すわけではない。タイムスタンプは正確な時刻を表すので、消去された列を読むべきではない。COMPACT STORAGEオプションが選択されたテーブルでは列を消去することはできない。</li>
         <li>WITH:テーブルのオプションを変更する。サポートされているオプションはCREATE TABLEと同じだが、COMPACT STORAGEはサポートされていない。あらゆるcompactionサブオプションは、すでに設定されていたcompactionオプションを上書きする。だから残したい設定があるなら、新たな設定をする前に、すでにされた設定を調べておかなければならない。compressionオプションについても同じである。</li>
@@ -809,12 +809,12 @@ SELECT entry_title, content FROM posts WHERE userid='john doe' AND posted_at >= 
 </pre></pre>
             <p>これはblog_titleとして"John's Blog"という値をもち、posted_atに'2012-01-01'が入った行を返す。blog_title &gt; 'John''s Blog'としておけば、post_at &lt;= '2012-01-01'という条件の行が返される。以下のクエリのようにはならない:</p><pre class="sample"><pre>SELECT * FROM posts WHERE userid='john doe' AND blog_title > 'John''s Blog' AND posted_at > '2012-01-01'
 </pre></pre>
-            <p>The tuple notation may also be used for <code>IN</code> clauses on <code>CLUSTERING COLUMNS</code>:</p><pre class="sample"><pre>SELECT * FROM posts WHERE userid='john doe' AND (blog_title, posted_at) IN (('John''s Blog', '2012-01-01), ('Extreme Chess', '2014-06-01'))
+            <p>CLUSTERING COLUMNSでINキーワードを使えば、タプルで条件を書くこともできる:</p><pre class="sample"><pre>SELECT * FROM posts WHERE userid='john doe' AND (blog_title, posted_at) IN (('John''s Blog', '2012-01-01), ('Extreme Chess', '2014-06-01'))
 </pre></pre>
             <h4 id="selectOrderBy"><code>&lt;order-by></code></h4>
             <p>ORDER BYオプションはクエリ結果を順序付けするのに使う。列の名前を引数として取る。可能なオーダーは限られている（これはテーブルCLUSTERIG ORDERに依存している）:</p>
             <ul>
-                <li>もしいかなるCLUSTERING ORDERの記載もないテーブルは、クラスタリングされた列とその逆順しか取れない。</li>
+                <li>いかなるCLUSTERING ORDERの記載もないテーブルは、クラスタリングされた列とその逆順しか取れない。</li>
                 <li>それでなければ、オーダーはCLUSTERING ORDERオプションどおりか、その逆順となる。</li>
             </ul>
             <h4 id="selectLimit"><code>LIMIT</code></h4>
